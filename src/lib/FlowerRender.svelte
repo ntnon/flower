@@ -21,6 +21,6 @@
 		opacity: 1;
 	}
 	svg {
-		background-color: gray;
+		background-color: white;
 	}
 </style>
