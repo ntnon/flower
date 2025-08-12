@@ -6,12 +6,9 @@
 	import {
 		randomBrewerScheme,
 		generateAnyRandomColorScheme,
-		generateRandomColorSchemeByType,
 		type ColorScheme,
 		type RandomSchemeType
 	} from '$lib/color';
-
-	import RenderColorScheme from '$lib/RenderColorScheme.svelte';
 
 	function generateRandomArrayWithCommonDenominator(
 		length: number,
@@ -37,6 +34,7 @@
 		even?: boolean;
 		locked?: boolean;
 		value: number;
+		name: string;
 	}
 
 	interface RangeState {
@@ -56,29 +54,34 @@
 			min: 3,
 			max: 70,
 			floor: true,
-			value: 12
+			value: 12,
+			name: 'Layers'
 		},
 		repetitionDenomonator: {
 			min: 2,
 			max: 12,
 			value: 3,
-			floor: true
+			floor: true,
+			name: 'Leaves'
+		},
+		baseGielisScale: {
+			min: 0,
+			max: 1,
+			value: 0.5,
+			name: 'Leaf Scale'
 		},
 		maxMultiplier: {
 			min: 1,
 			max: 9,
-			value: 3
+			value: 3,
+			name: 'Max'
 		},
 		colorSchemeIndexOffset: {
 			min: 6,
 			max: 24,
 			value: 12,
-			floor: true
-		},
-		baseGielisScale: {
-			min: 0,
-			max: 1,
-			value: 0.5
+			floor: true,
+			name: 'Color Offset'
 		}
 	});
 
@@ -95,7 +98,8 @@
 				floor: originalRange.floor,
 				even: originalRange.even,
 				locked: originalRange.locked,
-				value: updateRange(originalRange)
+				value: updateRange(originalRange),
+				name: originalRange.name
 			};
 		});
 		return newRanges;
@@ -176,6 +180,8 @@
 	let baseGielis = $state(new Gielis());
 	let colorCount = $state(20);
 	let selectedSchemeType: RandomSchemeType = $state('random');
+	let showRangeEditor = $state(true);
+	let showSeedControl = $state(false);
 
 	// Define original ranges for reset functionality
 	const originalRanges: FlowerRangeStates = {
@@ -183,29 +189,34 @@
 			min: 3,
 			max: 70,
 			floor: true,
-			value: 12
+			value: 12,
+			name: 'Layers'
 		},
 		repetitionDenomonator: {
 			min: 2,
 			max: 12,
 			value: 3,
-			floor: true
+			floor: true,
+			name: 'Leaves'
+		},
+		baseGielisScale: {
+			min: 0,
+			max: 1,
+			value: 0.5,
+			name: 'Leaf Scale'
 		},
 		maxMultiplier: {
 			min: 1,
 			max: 9,
-			value: 3
+			value: 3,
+			name: 'Max'
 		},
 		colorSchemeIndexOffset: {
 			min: 6,
 			max: 24,
 			value: 12,
-			floor: true
-		},
-		baseGielisScale: {
-			min: 0,
-			max: 1,
-			value: 0.5
+			floor: true,
+			name: 'Color Offset'
 		}
 	};
 
@@ -231,33 +242,16 @@
 	);
 </script>
 
-<FlowerRender {flower} />
-
-<div class="controls">
-	<button
-		onclick={() => {
-			currentSeed = Date.now();
-			setSeed(currentSeed);
-			const newRanges = rangesToRandom(fvrs);
-			fvrs = newRanges;
-			if (!colorLock) {
-				colorScheme = generateAnyRandomColorScheme(colorCount);
-			}
-		}}>randomize all</button
-	>
-	<button onclick={resetRanges}>Reset Ranges</button>
-	<div class="checkbox">
-		<input bind:checked={colorLock} type="checkbox" id="color-lock" />
-		<label for="color-lock">Lock Colors</label>
+<div class="container">
+	<div class="flower-display glass-card">
+		<FlowerRender {flower} />
 	</div>
 
-	<div class="seed-control">
-		<label for="seed-input">Seed:</label>
-		<input
-			id="seed-input"
-			type="number"
-			bind:value={currentSeed}
-			onchange={() => {
+	<div class="controls glass-card">
+		<button
+			class="primary-btn"
+			onclick={() => {
+				currentSeed = Date.now();
 				setSeed(currentSeed);
 				const newRanges = rangesToRandom(fvrs);
 				fvrs = newRanges;
@@ -265,206 +259,135 @@
 					colorScheme = generateAnyRandomColorScheme(colorCount);
 				}
 			}}
-		/>
-		<button
-			onclick={() => {
-				setSeed(currentSeed);
-				const newRanges = rangesToRandom(fvrs);
-				fvrs = newRanges;
-				if (!colorLock) {
-					colorScheme = generateAnyRandomColorScheme(colorCount);
-				}
-			}}>Apply Seed</button
 		>
-	</div>
-
-	<div class="colo(r)-controls">
-		<label for="color-count">Colors:</label>
-		<input id="color-count" type="number" min="2" max="50" bind:value={colorCount} />
-
-		<label for="scheme-type">Type:</label>
-		<select id="scheme-type" bind:value={selectedSchemeType}>
-			<option value="random">Random</option>
-			<option value="monochrome">Monochrome</option>
-			<option value="analogous">Analogous</option>
-			<option value="complementary">Complementary</option>
-			<option value="triadic">Triadic</option>
-			<option value="warm">Warm</option>
-			<option value="cool">Cool</option>
-			<option value="pastel">Pastel</option>
-			<option value="vibrant">Vibrant</option>
-			<option value="earth">Earth</option>
-		</select>
-
-		<button
-			onclick={() => {
-				colorScheme = generateRandomColorSchemeByType(colorCount, selectedSchemeType);
-			}}>Generate Colors</button
-		>
-	</div>
-</div>
-
-{#each Object.keys(fvrs) as key (key)}
-	{@const obj = fvrs[key]}
-	<div class="control-group">
-		<div class="control-header">{key}</div>
-		<label for="{key}-min">Min</label>
-		<input
-			id="{key}-min"
-			type="number"
-			bind:value={obj.min}
-			onchange={() => {
-				if (obj.min > obj.max) {
-					obj.max = obj.min;
-				}
-				if (obj.value < obj.min) {
-					obj.value = obj.min;
-				}
-			}}
-		/>
-
-		<input
-			type="range"
-			min={obj.min}
-			max={obj.max}
-			step={obj.floor ? 1 : 0.01}
-			bind:value={obj.value}
-		/>
-
-		<label for="{key}-max">Max</label>
-		<input
-			id="{key}-max"
-			type="number"
-			bind:value={obj.max}
-			onchange={() => {
-				if (obj.max < obj.min) {
-					obj.min = obj.max;
-				}
-				if (obj.value > obj.max) {
-					obj.value = obj.max;
-				}
-			}}
-		/>
+			✨ Generate New Flower
+		</button>
 
 		<div class="checkbox">
-			<input id="{key}-locked" type="checkbox" bind:checked={obj.locked} />
-			<label for="{key}-locked">Locked</label>
+			<input bind:checked={colorLock} type="checkbox" id="color-lock" />
+			<label for="color-lock">🎨 Lock Colors</label>
 		</div>
 
-		<div>Value: {obj.value}</div>
-		<div class="debug-info">
-			<small>Min: {obj.min}, Max: {obj.max}, Step: {obj.floor ? 1 : 0.01}</small>
+		<div class="seed-control">
+			<label for="seed-input">Seed</label>
+			<input
+				id="seed-input"
+				type="number"
+				bind:value={currentSeed}
+				onchange={() => {
+					setSeed(currentSeed);
+					const newRanges = rangesToRandom(fvrs);
+					fvrs = newRanges;
+					if (!colorLock) {
+						colorScheme = generateAnyRandomColorScheme(colorCount);
+					}
+				}}
+			/>
+		</div>
+
+		<div class="color-controls">
+			<label for="color-count">Colors</label>
+			<input
+				id="color-count"
+				type="number"
+				min="2"
+				max="50"
+				bind:value={colorCount}
+				onchange={() => {
+					if (!colorLock) {
+						colorScheme = generateAnyRandomColorScheme(colorCount);
+					}
+				}}
+			/>
+
+			<label for="scheme-type">Palette</label>
+			<select
+				id="scheme-type"
+				bind:value={selectedSchemeType}
+				onchange={() => {
+					if (!colorLock) {
+						colorScheme = generateAnyRandomColorScheme(colorCount);
+					}
+				}}
+			>
+				<option value="random">Random</option>
+				<option value="monochrome">Monochrome</option>
+				<option value="analogous">Analogous</option>
+				<option value="complementary">Complementary</option>
+				<option value="triadic">Triadic</option>
+				<option value="warm">Warm</option>
+				<option value="cool">Cool</option>
+				<option value="pastel">Pastel</option>
+				<option value="vibrant">Vibrant</option>
+				<option value="earth">Earth</option>
+			</select>
 		</div>
 	</div>
-{/each}
-<RenderColorScheme scheme={flower.colorScheme} />
 
-<style>
-	.controls {
-		display: flex;
-		gap: 1rem;
-		align-items: center;
-		margin-bottom: 1rem;
-		padding: 1rem;
-		border: 1px solid #ddd;
-		border-radius: 4px;
-	}
+	<div class="parameters-section">
+		{#each Object.keys(fvrs) as key (key)}
+			{@const obj = fvrs[key]}
+			<div class="control-group glass-card">
+				<div class="parameter-header">
+					<h3>{obj.name}</h3>
+					<div class="value-display">
+						{obj.floor ? Math.floor(obj.value) : obj.value.toFixed(2)}
+					</div>
+				</div>
 
-	.seed-control {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
+				<div class="range-container">
+					<input
+						type="range"
+						min={obj.min}
+						max={obj.max}
+						step={obj.floor ? 1 : 0.01}
+						bind:value={obj.value}
+						class="modern-range"
+					/>
+				</div>
 
-	.color-controls {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		border-left: 1px solid #ddd;
-		padding-left: 1rem;
-	}
+				<div class="parameter-controls">
+					<div class="min-max-inputs">
+						<div class="input-group">
+							<label for="{key}-min">Min</label>
+							<input
+								id="{key}-min"
+								type="number"
+								bind:value={obj.min}
+								onchange={() => {
+									if (obj.min > obj.max) {
+										obj.max = obj.min;
+									}
+									if (obj.value < obj.min) {
+										obj.value = obj.min;
+									}
+								}}
+							/>
+						</div>
+						<div class="input-group">
+							<label for="{key}-max">Max</label>
+							<input
+								id="{key}-max"
+								type="number"
+								bind:value={obj.max}
+								onchange={() => {
+									if (obj.max < obj.min) {
+										obj.min = obj.max;
+									}
+									if (obj.value > obj.max) {
+										obj.value = obj.max;
+									}
+								}}
+							/>
+						</div>
+					</div>
 
-	.color-controls input[type='number'] {
-		width: 60px;
-	}
-
-	.color-controls select {
-		padding: 0.25rem;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-	}
-
-	.control-group {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.4rem;
-		padding: 0.3rem 0.5rem;
-		margin-bottom: 0.3rem;
-		border-bottom: 1px solid #ddd;
-		font-size: 0.85rem;
-	}
-
-	.control-header {
-		font-weight: 600;
-		margin-right: 0.5rem;
-		white-space: nowrap;
-	}
-
-	input[type='number'] {
-		width: 50px;
-		padding: 0.1rem;
-		font-size: 0.8rem;
-	}
-
-	input[type='range'] {
-		flex: 1;
-		min-width: 100px;
-		accent-color: #007acc;
-	}
-
-	label {
-		font-size: 0.75rem;
-		white-space: nowrap;
-	}
-
-	.checkbox {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		background: rgba(0, 122, 204, 0.1);
-		padding: 0.5rem;
-		border-radius: 4px;
-		border: 1px solid rgba(0, 122, 204, 0.3);
-	}
-
-	.checkbox input[type='checkbox'] {
-		transform: scale(1.2);
-		accent-color: #007acc;
-	}
-
-	.checkbox label {
-		font-weight: 500;
-		color: #007acc;
-		cursor: pointer;
-	}
-
-	button {
-		padding: 0.5rem 1rem;
-		background: #007acc;
-		color: white;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-	}
-
-	button:hover {
-		background: #005a9e;
-	}
-
-	.debug-info {
-		font-size: 0.7rem;
-		color: #999;
-		margin-top: 0.25rem;
-	}
-</style>
+					<div class="checkbox parameter-lock">
+						<input id="{key}-locked" type="checkbox" bind:checked={obj.locked} />
+						<label for="{key}-locked">🔒</label>
+					</div>
+				</div>
+			</div>
+		{/each}
+	</div>
+</div>
