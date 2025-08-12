@@ -52,7 +52,7 @@
 	let fvrs: FlowerRangeStates = $state({
 		corollaCount: {
 			min: 3,
-			max: 70,
+			max: 40,
 			floor: true,
 			value: 12,
 			name: 'Layers'
@@ -66,7 +66,7 @@
 		},
 		baseGielisScale: {
 			min: 0,
-			max: 1,
+			max: 1.1,
 			value: 0.5,
 			name: 'Leaf Scale'
 		},
@@ -173,7 +173,6 @@
 	let colorLock = $state(false);
 	let baseGielis = $state(new Gielis());
 	let colorCount = $state(20);
-	let selectedSchemeType: RandomSchemeType = $state('random');
 	let showRangeEditor = $state(false);
 
 	// Initialize with current seed
