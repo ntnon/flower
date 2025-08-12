@@ -3,12 +3,7 @@
 	import FlowerRender from '$lib/FlowerRender.svelte';
 	import { ranEven, ranInRange, setSeed } from '$lib/Functions';
 	import { Flower } from '$lib/Flower';
-	import {
-		randomBrewerScheme,
-		generateAnyRandomColorScheme,
-		type ColorScheme,
-		type RandomSchemeType
-	} from '$lib/color';
+	import { randomBrewerScheme, generateAnyRandomColorScheme, type ColorScheme } from '$lib/color';
 
 	function generateRandomArrayWithCommonDenominator(
 		length: number,
@@ -172,7 +167,7 @@
 	let colorScheme = $state(randomBrewerScheme(20));
 	let colorLock = $state(false);
 	let baseGielis = $state(new Gielis());
-	let colorCount = $state(20);
+	let colorCount = $state(10);
 	let showRangeEditor = $state(false);
 
 	// Initialize with current seed
@@ -191,6 +186,7 @@
 			colorScheme
 		)
 	);
+	currentSeed = Date.now();
 </script>
 
 <div class="flower-display">
@@ -200,8 +196,6 @@
 <div class="controls">
 	<button
 		onclick={() => {
-			currentSeed = Date.now();
-			setSeed(currentSeed);
 			const newRanges = rangesToRandom(fvrs);
 			fvrs = newRanges;
 			if (!colorLock) {
@@ -231,6 +225,10 @@
 		</div>
 	{/if}
 	<div class="checkbox lock">
+		<input bind:checked={showRangeEditor} type="checkbox" id="color-lock" />
+		<label for="color-lock">Show Ranges</label>
+	</div>
+	<div class="checkbox lock">
 		<input bind:checked={colorLock} type="checkbox" id="color-lock" />
 		<label for="color-lock">🎨 Lock Colors</label>
 	</div>
@@ -238,60 +236,62 @@
 
 {#each Object.keys(fvrs) as key (key)}
 	{@const obj = fvrs[key]}
-	<div class="control-group">
-		<div class="param-header">
-			<span class="param-name">{obj.name}</span>
-			<span class="param-value">
-				{obj.floor ? Math.floor(obj.value) : obj.value.toFixed(2)}
-			</span>
-			<div class="checkbox lock">
-				<input id="{key}-locked" type="checkbox" bind:checked={obj.locked} />
-				<label for="{key}-locked">🔒</label>
+	{#if obj.name !== 'Max' && obj.name !== 'Color Offset'}
+		<div class="control-group">
+			<div class="param-header">
+				<span class="param-name">{obj.name}</span>
+				<span class="param-value">
+					{obj.floor ? Math.floor(obj.value) : obj.value.toFixed(2)}
+				</span>
+				<div class="checkbox lock">
+					<input id="{key}-locked" type="checkbox" bind:checked={obj.locked} />
+					<label for="{key}-locked">🔒</label>
+				</div>
 			</div>
-		</div>
-		<div>
-			<input
-				type="range"
-				min={obj.min}
-				max={obj.max}
-				step={obj.floor ? 1 : 0.01}
-				bind:value={obj.value}
-			/>
-		</div>
-		{#if showRangeEditor}
-			<div class="param-controls">
-				<label for="{key}-min">Min</label>
+			<div>
 				<input
-					id="{key}-min"
-					type="number"
-					bind:value={obj.min}
-					onchange={() => {
-						if (obj.min > obj.max) {
-							obj.max = obj.min;
-						}
-						if (obj.value < obj.min) {
-							obj.value = obj.min;
-						}
-					}}
+					type="range"
+					min={obj.min}
+					max={obj.max}
+					step={obj.floor ? 1 : 0.01}
+					bind:value={obj.value}
 				/>
+			</div>
+			{#if showRangeEditor}
+				<div class="param-controls">
+					<label for="{key}-min">Min</label>
+					<input
+						id="{key}-min"
+						type="number"
+						bind:value={obj.min}
+						onchange={() => {
+							if (obj.min > obj.max) {
+								obj.max = obj.min;
+							}
+							if (obj.value < obj.min) {
+								obj.value = obj.min;
+							}
+						}}
+					/>
 
-				<label for="{key}-max">Max</label>
-				<input
-					id="{key}-max"
-					type="number"
-					bind:value={obj.max}
-					onchange={() => {
-						if (obj.max < obj.min) {
-							obj.min = obj.max;
-						}
-						if (obj.value > obj.max) {
-							obj.value = obj.max;
-						}
-					}}
-				/>
-			</div>
-		{/if}
-	</div>
+					<label for="{key}-max">Max</label>
+					<input
+						id="{key}-max"
+						type="number"
+						bind:value={obj.max}
+						onchange={() => {
+							if (obj.max < obj.min) {
+								obj.min = obj.max;
+							}
+							if (obj.value > obj.max) {
+								obj.value = obj.max;
+							}
+						}}
+					/>
+				</div>
+			{/if}
+		</div>
+	{/if}
 {/each}
 
 <style>
