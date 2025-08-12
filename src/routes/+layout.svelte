@@ -1,18 +1,18 @@
 <script>
 	const { children } = $props();
 	let checked = $state(false);
+	import Corolla from './corolla/+page.svelte';
 </script>
-
-<div style="display: flex; gap: 10px; flex-direction: row;">
-	<a href="/gielis">Gielis</a>
-	<a href="/color">Color</a>
-	<a href="/editor">Editor</a>
-	<a href="/corolla">Corolla</a>
-</div>
 
 show todo:<input type="checkbox" bind:checked /><br />
 
 {#if checked}
+	<div style="display: flex; gap: 10px; flex-direction: row;">
+		<a href="/gielis">Gielis</a>
+		<a href="/color">Color</a>
+		<a href="/editor">Editor</a>
+		<a href="/corolla">Corolla</a>
+	</div>
 	<h1>TODO:</h1>
 	<ol>
 		<li>Create interface for modifying flower dynamically</li>
@@ -32,6 +32,7 @@ show todo:<input type="checkbox" bind:checked /><br />
 {/if}
 
 {@render children()}
+<Corolla />
 
 <style>
 	li {
