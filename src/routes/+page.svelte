@@ -1,2 +1,14 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+</script>
+
+<style>
+    .box {
+        position: absolute;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+        width: 100px;
+        height: 100px;
+        background-color: yellow;
+    }
+</style>
