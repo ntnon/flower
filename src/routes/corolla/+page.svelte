@@ -1,23 +1,10 @@
 <script lang="ts">
 	import { Gielis } from '$lib/Gielis';
 	import FlowerRender from '$lib/FlowerRender.svelte';
-	import { ranEven, ranInRange } from '$lib/Functions';
+	import { ranEven, ranInRange, setSeed } from '$lib/Functions';
 	import { Flower } from '$lib/Flower';
 	import { randomBrewerScheme, randomColorScheme, type ColorScheme } from '$lib/color';
-	import { VectorMatrix } from '$lib/VectorMatrix';
 	import RenderColorScheme from '$lib/RenderColorScheme.svelte';
-
-	const randomGielis = () => {
-		return new Gielis({
-			m: ranEven(4, 8),
-			a: ranInRange(0.1, 2.4),
-			b: ranInRange(0.1, 0.4),
-			n1: ranInRange(1.5, 5.0),
-			n2: ranInRange(0.5, 4.0),
-			n3: ranInRange(0.5, 1.6),
-			steps: 60
-		});
-	};
 
 	function generateRandomArrayWithCommonDenominator(
 		length: number,
@@ -30,21 +17,11 @@
 
 		const result: number[] = [];
 		for (let i = 0; i < length; i++) {
-			const randomMultiplier = Math.floor(Math.random() * maxMultiplier) + 1;
+			const randomMultiplier = Math.floor(ranInRange(1, maxMultiplier + 1));
 			result.push(randomMultiplier * denominator);
 		}
 		return result;
 	}
-
-	let v = {
-		m: 12,
-		a: 3.8519184768574606,
-		b: 0.6073450989410323,
-		n1: 12.504330954064185,
-		n2: -1.7340472058368928,
-		n3: 11.832615310104968,
-		steps: 730.2634962171134
-	};
 
 	interface FlowerVarRange {
 		min: number;
@@ -72,7 +49,7 @@
 			min: 3,
 			max: 70,
 			floor: true,
-			value: 0
+			value: 12
 		},
 		repetitionDenomonator: {
 			min: 2,
@@ -83,34 +60,40 @@
 		maxMultiplier: {
 			min: 1,
 			max: 9,
-			value: 0
+			value: 3
 		},
 		colorSchemeIndexOffset: {
 			min: 6,
 			max: 24,
-			value: 0,
+			value: 12,
 			floor: true
 		},
 		baseGielisScale: {
 			min: 0,
 			max: 1,
-			value: 0
+			value: 0.5
 		}
 	});
 
 	const rangesToRandom = (ranges: FlowerRangeStates): FlowerRangeStates => {
-		let newRanges: FlowerRangeStates = ranges;
-		Object.keys(ranges).forEach((r) => (ranges[r].value = updateRange(ranges[r])));
+		let newRanges: FlowerRangeStates = { ...ranges };
+		Object.keys(newRanges).forEach((r) => {
+			newRanges[r] = { ...newRanges[r], value: updateRange(newRanges[r]) };
+		});
 		return newRanges;
 	};
 
 	const updateRange = (fvr: FlowerVarRange): number => {
-		let newVal = ranInRange(fvr.min, fvr.max);
 		if (fvr.locked) return fvr.value ?? fvr.min;
-		if (fvr.floor) return Math.floor(newVal);
-		if (fvr.even)
-			return ranEven(fvr.min, fvr.max); //Not actually implemented
-		else return newVal;
+
+		let newVal = ranInRange(fvr.min, fvr.max);
+		if (fvr.even) {
+			return ranEven(fvr.min, fvr.max);
+		} else if (fvr.floor) {
+			return Math.floor(newVal);
+		} else {
+			return newVal;
+		}
 	};
 
 	const flowerGenerator = (
@@ -163,8 +146,12 @@
 			.scaleToRadius(radius);
 	};
 
-	let colorScheme = randomBrewerScheme(20);
-	let baseGielis = new Gielis();
+	let currentSeed = $state(Date.now());
+	let colorScheme = $state(randomBrewerScheme(20));
+	let baseGielis = $state(new Gielis());
+
+	// Initialize with current seed
+	setSeed(currentSeed);
 	let flower = $derived(
 		flowerGenerator(
 			baseGielis,
@@ -180,19 +167,44 @@
 
 <FlowerRender {flower} />
 
-<button
-	onclick={() => {
-		fvrs = rangesToRandom(fvrs);
-		colorScheme = randomColorScheme();
-	}}>randomize</button
->
+<div class="controls">
+	<button
+		onclick={() => {
+			currentSeed = Date.now();
+			setSeed(currentSeed);
+			fvrs = rangesToRandom(fvrs);
+			colorScheme = randomColorScheme();
+		}}>randomize</button
+	>
+
+	<div class="seed-control">
+		<label for="seed-input">Seed:</label>
+		<input
+			id="seed-input"
+			type="number"
+			bind:value={currentSeed}
+			onchange={() => {
+				setSeed(currentSeed);
+				fvrs = rangesToRandom(fvrs);
+				colorScheme = randomColorScheme();
+			}}
+		/>
+		<button
+			onclick={() => {
+				setSeed(currentSeed);
+				fvrs = rangesToRandom(fvrs);
+				colorScheme = randomColorScheme();
+			}}>Apply Seed</button
+		>
+	</div>
+</div>
 
 {#each Object.keys(fvrs) as key (key)}
 	{@const obj = fvrs[key]}
 	<div class="control-group">
 		<div class="control-header">{key}</div>
-		<label>Min</label>
-		<input type="number" max={obj.max} bind:value={obj.min} />
+		<label for="{key}-min">Min</label>
+		<input id="{key}-min" type="number" max={obj.max} bind:value={obj.min} />
 
 		<input
 			type="range"
@@ -202,12 +214,12 @@
 			bind:value={obj.value}
 		/>
 
-		<label>Max</label>
-		<input type="number" min={obj.min} bind:value={obj.max} />
+		<label for="{key}-max">Max</label>
+		<input id="{key}-max" type="number" min={obj.min} bind:value={obj.max} />
 
 		<div class="checkbox">
-			<input type="checkbox" bind:checked={obj.locked} />
-			Locked
+			<input id="{key}-locked" type="checkbox" bind:checked={obj.locked} />
+			<label for="{key}-locked">Locked</label>
 		</div>
 
 		<div>Value: {obj.value}</div>
@@ -216,6 +228,22 @@
 <RenderColorScheme scheme={flower.colorScheme} />
 
 <style>
+	.controls {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		margin-bottom: 1rem;
+		padding: 1rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+	}
+
+	.seed-control {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
 	.control-group {
 		display: flex;
 		flex-wrap: wrap;
@@ -254,5 +282,18 @@
 		display: flex;
 		align-items: center;
 		gap: 0.25rem;
+	}
+
+	button {
+		padding: 0.5rem 1rem;
+		background: #007acc;
+		color: white;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+
+	button:hover {
+		background: #005a9e;
 	}
 </style>
