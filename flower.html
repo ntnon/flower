@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Petals</title>
+</head>
+
+<body>
+    <label for="petalColor">Petal Color:</label>
+    <input type="text" id="petalColor" placeholder="e.g., red"><br>
+
+    <label for="petalLength">Petal Length:</label>
+    <input type="number" id="petalLength" placeholder="e.g., 5"><br>
+
+    <label for="petalWidth">Petal Width:</label>
+    <input type="number" id="petalWidth" placeholder="e.g., 2"><br>
+
+    <button onclick="generatePetal()">Generate Petal</button>
+
+    <div id="output"></div>
+
+    <script>
+        class Petal {
+            constructor(color, length, width) {
+                this.color = color;
+                this.length = length;
+                this.width = width;
+            }
+        }
+
+        function generatePetal() {
+            // Get input values or use defaults if empty
+            let color = document.getElementById("petalColor").value || "red";
+            let length = parseFloat(document.getElementById("petalLength").value) || 5;
+            let width = parseFloat(document.getElementById("petalWidth").value) || 2;
+
+            // Create a Petal instance
+            let petal = new Petal(color, length, width);
+
+            // Log the petal to the console
+            console.log(petal);
+
+            // Display the petal in the HTML
+            const outputDiv = document.getElementById("output");
+            outputDiv.innerHTML = `
+        <p><strong>Generated Petal:</strong></p>
+        <p>Color: ${petal.color}</p>
+        <p>Length: ${petal.length}</p>
+        <p>Width: ${petal.width}</p>
+      `;
+        }
+    </script>
+</body>
+
+</html>

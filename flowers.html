@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programmatic Flower Generator</title>
+</head>
+
+<body>
+
+    <button onclick="generateFlower()">Generate Flower</button><br>
+    <button onclick="generateRandomFlower()">Generate Random Flower</button><br>
+
+    <label for="petalColor">Petal Color:</label>
+    <input type="text" id="petalColor" placeholder="e.g., red"><br>
+
+    <label for="numPetals">Number of Petals:</label>
+    <input type="number" id="numPetals" placeholder="e.g., 6"><br>
+
+    <label for="petalLength">Petal Length:</label>
+    <input type="number" id="petalLength" placeholder="e.g., 50"><br>
+
+    <label for="petalWidth">Petal Width:</label>
+    <input type="number" id="petalWidth" placeholder="e.g., 20"><br>
+
+
+
+    <canvas id="flowerCanvas" width="500" height="500" style="border: 1px solid black;"></canvas>
+
+    <script>
+        function drawPetal(ctx, x, y, length, width, angle, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.ellipse(0, -length / 2, width / 2, length / 2, 0, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawFlower(ctx, x, y, numPetals, petalLength, petalWidth, petalColor) {
+            const angleIncrement = (2 * Math.PI) / numPetals;
+            for (let i = 0; i < numPetals; i++) {
+                const angle = i * angleIncrement;
+                drawPetal(ctx, x, y, petalLength, petalWidth, angle, petalColor);
+            }
+
+            // Draw flower center
+            ctx.beginPath();
+            ctx.arc(x, y, petalWidth / 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'yellow';
+            ctx.fill();
+        }
+
+        function generateFlower() {
+            const canvas = document.getElementById('flowerCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Get input values
+            const petalColor = document.getElementById('petalColor').value || 'red';
+            const numPetals = parseInt(document.getElementById('numPetals').value) || 6;
+            const petalLength = parseFloat(document.getElementById('petalLength').value) || 50;
+            const petalWidth = parseFloat(document.getElementById('petalWidth').value) || 20;
+
+            // Draw the flower
+            drawFlower(ctx, canvas.width / 2, canvas.height / 2, numPetals, petalLength, petalWidth, petalColor);
+        }
+
+        function generateRandomFlower() {
+            document.getElementById('petalColor').value = getRandomColor();
+            document.getElementById('numPetals').value = Math.floor(Math.random() * 5) + 5;
+            document.getElementById('petalLength').value = Math.floor(Math.random() * 50) + 80;
+            document.getElementById('petalWidth').value = Math.floor(Math.random() * 20) + 40;
+            generateFlower();
+
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+    </script>
+</body>
+
+</html>
