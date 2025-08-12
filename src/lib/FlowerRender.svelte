@@ -2,11 +2,7 @@
 	import type { Flower, FlowerPart } from './Flower';
 
 	let { flower }: { flower: Flower } = $props();
-	let inspect = $state(false);
 </script>
-
-inspect-mode:
-<input bind:checked={inspect} type="checkbox" />
 
 {#snippet flowerPath(f: FlowerPart)}
 	<path d={f.vectors.path} fill={f.color} stroke="black" stroke-width="0"></path>

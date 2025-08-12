@@ -34,11 +34,8 @@ export class VectorMatrices {
 		return this;
 	}
 	updatePath() {
-		//console.log("no update")
-
 		let acc = 0;
 		this.vectors.map((v) => (acc += v.vectors.length));
-		console.log(acc);
 	}
 
 	[Symbol.iterator](): Iterator<VectorMatrix> {

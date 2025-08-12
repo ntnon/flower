@@ -1,10 +1,7 @@
 <script>
 	const { children } = $props();
 	let checked = $state(false);
-	import Corolla from './corolla/+page.svelte';
 </script>
-
-show todo:<input type="checkbox" bind:checked /><br />
 
 {#if checked}
 	<div style="display: flex; gap: 10px; flex-direction: row;">
@@ -32,7 +29,6 @@ show todo:<input type="checkbox" bind:checked /><br />
 {/if}
 
 {@render children()}
-<Corolla />
 
 <style>
 	li {
